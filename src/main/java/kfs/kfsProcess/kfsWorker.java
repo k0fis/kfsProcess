@@ -64,7 +64,7 @@ public class kfsWorker implements Runnable {
     @Override
     public void run() {
         ArrayList<String> cmdLst = new ArrayList<String>();
-        cmdLst.addAll(Arrays.asList("java", "-cp", getClassPath(), getMainClass()));
+        cmdLst.addAll(Arrays.asList("java", "-Xmx512m", "-cp", getClassPath(), getMainClass()));
         cmdLst.addAll(conf.getParameters());
         if (debug) {
             catchInfo("run process " + Arrays.toString(cmdLst.toArray(new String[cmdLst.size()])));
