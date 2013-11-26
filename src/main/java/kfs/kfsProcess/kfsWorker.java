@@ -34,7 +34,7 @@ public class kfsWorker implements Runnable {
         StringBuilder sb = new StringBuilder();
         sb.append("java -cp ").append(getClassPath()).append(" ").append(getMainClass());
         for (String s : getParameters()) {
-            sb.append(s);
+            sb.append(" ").append(s);
         }
         String cmd = sb.toString();
         catchInfo("run process " + cmd);

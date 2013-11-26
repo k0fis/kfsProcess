@@ -16,7 +16,6 @@
 
 
     <build>
-        <finalName>${project.name}</finalName>
         <plugins>
             <plugin>
                 <version>3.0</version>
