@@ -4,7 +4,7 @@
 
     <groupId>kfs</groupId>
     <artifactId>kfsProcess</artifactId>
-    <version>1.0</version>
+    <version>1.5</version>
     <packaging>jar</packaging>
 
     <name>kfsProcess</name>
@@ -32,8 +32,8 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Author>Pavel Drimalka (c) 2013</Author>
-                            <Mail>pavel.drimalka@gmail.com</Mail>
+                            <Author>Pavel Drimalka (c) 2014</Author>
+                            <Mail>pavel.drimalka@icloud.com</Mail>
                         </manifestEntries>
                     </archive>
                 </configuration>

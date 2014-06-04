@@ -2,6 +2,8 @@ package kfs.kfsProcess;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  *
@@ -9,37 +11,44 @@ import java.io.InputStreamReader;
  */
 public class kfsWorker implements Runnable {
 
-    public void catchInfo(String msg) {
+    protected kfsProcessConf conf;
+    private final boolean debug;
 
+    public kfsWorker(kfsProcessConf conf) {
+        this(conf, false);
+    }
+    public kfsWorker(kfsProcessConf conf, boolean debug) {
+        this.conf = conf;
+        this.debug = debug;
     }
 
-    public void catchError(String msg, Exception ex) {
+    protected void catchInfo(String msg) {
+        System.out.println(msg);
+    }
 
+    protected void catchError(String msg, Exception ex) {
+        System.err.println(msg);
+        ex.printStackTrace(System.err);
     }
 
     protected String getMainClass() {
-        return "";
+        return getClass().getName();
     }
 
     protected String getClassPath() {
         return System.getProperty("java.class.path");
     }
 
-    protected String[] getParameters() {
-        return new String[0];
-    }
-
     @Override
     public void run() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("java -cp ").append(getClassPath()).append(" ").append(getMainClass());
-        for (String s : getParameters()) {
-            sb.append(" ").append(s);
+        ArrayList<String> cmdLst = new ArrayList<String>();
+        cmdLst.addAll(Arrays.asList("java", "-cp", getClassPath(), getMainClass()));
+        cmdLst.addAll(conf.getParameters());
+        if (debug) {
+            catchInfo("run process " + Arrays.toString(cmdLst.toArray(new String[cmdLst.size()])));
         }
-        String cmd = sb.toString();
-        catchInfo("run process " + cmd);
         try {
-            ProcessBuilder builder = new ProcessBuilder(cmd.split(" "));
+            ProcessBuilder builder = new ProcessBuilder(cmdLst);
             Process process = builder.start();
             process.waitFor();
 
@@ -68,14 +77,15 @@ public class kfsWorker implements Runnable {
             } finally {
                 in.close();
             }
-
             process.destroy();
         } catch (IOException ex) {
-            catchError("Cannot execute " + cmd, ex);
+            catchError("Cannot execute " + cmdLst, ex);
         } catch (InterruptedException ex) {
-            catchError("Cannot execute " + cmd, ex);
+            catchError("Cannot execute " + cmdLst, ex);
         }
-        catchInfo("process done");
+        if (debug) {
+            catchInfo("process done");
+        }
     }
 
 }

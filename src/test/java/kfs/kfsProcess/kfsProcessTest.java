@@ -1,7 +1,9 @@
 package kfs.kfsProcess;
 
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import junit.framework.TestCase;
 
 /**
@@ -28,82 +30,35 @@ public class kfsProcessTest extends TestCase {
      * Test of catchInfo method, of class kfsProcess.
      */
     public void testRun() {
-        (new kfsProcess() {
+        kfsProcessFactory factory = new kfsProcessFactory() {
 
             @Override
-            public void catchInfo(String msg) {
-                System.out.println("Info: " + msg);
+            public kfsWorker createWorker(kfsProcessConf conf) throws kfsProcessException {
+                return new testWorker(conf);
             }
 
             @Override
-            public void catchError(String msg, Exception ex) {
-                System.err.println("Error: " + msg);
-                if (ex != null) {
-                    System.err.println(ex.getMessage());
-                    ex.printStackTrace();
-                }
+            public List<kfsProcessConf> getConf() {
+                return Arrays.asList(
+                        testConf.create(1,  1000l),
+                        testConf.create(2, 10000l),
+                        testConf.create(3, 10000l),
+                        testConf.create(4, 10000l),
+                        testConf.create(5,  1000l),
+                        testConf.create(6, 20000l),
+                        testConf.create(7, 20000l),
+                        testConf.create(8, 20000l),
+                        testConf.create(9,  2000l),
+                        testConf.create(10, 2000l),
+                        testConf.create(11, 2000l)
+                );
             }
-
-            @Override
-            protected Collection<kfsWorker> getWorkers() {
-                return Arrays.asList(new kfsWorker[]{
-                    new kfsWorker() {
-
-                        @Override
-                        protected String[] getParameters() {
-                            return new String[]{"1"};
-                        }
-
-                        @Override
-                        protected String getMainClass() {
-                            return "kfs.kfsProcess.testWork";
-                        }
-
-                        @Override
-                        public void catchInfo(String msg) {
-                            System.out.println("Info: " + msg);
-                        }
-
-                        @Override
-                        public void catchError(String msg, Exception ex) {
-                            System.err.println("Error: " + msg);
-                            if (ex != null) {
-                                System.err.println(ex.getMessage());
-                                ex.printStackTrace();
-                            }
-                        }
-
-                    }, new kfsWorker() {
-
-                        @Override
-                        protected String[] getParameters() {
-                            return new String[]{"2"};
-                        }
-
-                        @Override
-                        protected String getMainClass() {
-                            return "kfs.kfsProcess.testWork";
-                        }
-
-                        @Override
-                        public void catchInfo(String msg) {
-                            System.out.println("Info: " + msg);
-                        }
-
-                        @Override
-                        public void catchError(String msg, Exception ex) {
-                            System.err.println("Error: " + msg);
-                            if (ex != null) {
-                                System.err.println(ex.getMessage());
-                                ex.printStackTrace();
-                            }
-                        }
-
-                    }
-                });
-            }
-
-        }).run();
+        };
+        try {
+            new kfsProcess(factory, 4).run();
+        } catch (kfsProcessException ex) {
+            Logger.getLogger(kfsProcessTest.class.getName()).log(Level.SEVERE, "Cannot run proces", ex);
+        }
 
     }
 

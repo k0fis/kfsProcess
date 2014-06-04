@@ -1,7 +1,5 @@
 package kfs.kfsProcess;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -12,57 +10,45 @@ import java.util.concurrent.TimeUnit;
  */
 public class kfsProcess {
 
-    public void catchInfo(String msg) {
+    private final kfsProcessFactory factory;
+    private final int poolSize;
+    private final long awaitTime;
+    private final long waitTime;
+    private final TimeUnit timeUnit;
 
+    public kfsProcess(kfsProcessFactory factory, int poolSize) {
+        this(factory, poolSize, 10, TimeUnit.SECONDS, 500l);
     }
 
-    public void catchError(String msg, Exception ex) {
-
+    public kfsProcess(kfsProcessFactory factory, int poolSize, long awaitTime, TimeUnit timeUnit, long waitTime) {
+        this.factory = factory;
+        this.poolSize = poolSize;
+        this.awaitTime = awaitTime;
+        this.timeUnit = timeUnit;
+        this.waitTime = waitTime;
     }
 
-    protected long waitingAwaitTermSeconds() {
-        return 5l;
-    }
+    @SuppressWarnings("empty-statement")
+    public void run() throws kfsProcessException {
 
-    protected long waitingTermMilisec() {
-        return 50l;
-    }
-
-    protected int poolSize() {
-        return 5;
-    }
-
-    protected Collection<kfsWorker> getWorkers() {
-        return Arrays.<kfsWorker>asList();
-    }
-
-    public void run() {
-
-        catchInfo("begin");
-
-        ExecutorService pool = Executors.newFixedThreadPool(poolSize());
-        for (kfsWorker w : getWorkers()) {
-            pool.execute(w);
+        ExecutorService pool = Executors.newFixedThreadPool(poolSize);
+        for (kfsProcessConf cfg : factory.getConf()) {
+            pool.execute(factory.createWorker(cfg));
         }
-        catchInfo("await");
-
-        try {
-            pool.awaitTermination(waitingAwaitTermSeconds(), TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            catchError("Cannot wait for termination", ex);
-        }
-
         pool.shutdown();
 
-        catchInfo("Wait for Terminated");
+        try {
+            while (!pool.awaitTermination(awaitTime, timeUnit));
+        } catch (InterruptedException ex) {
+            throw new kfsProcessException("Cannot wait for termination", ex);
+        }
 
         while (!pool.isTerminated()) {
             try {
-                Thread.sleep(waitingTermMilisec());
+                Thread.sleep(waitTime);
             } catch (InterruptedException ex) {
-                catchError("Cannot wait for thread poll", ex);
+                throw new kfsProcessException("Cannot wait for thread poll", ex);
             }
         }
-        catchInfo("done");
     }
 }
