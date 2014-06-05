@@ -11,24 +11,36 @@ import java.util.Arrays;
  */
 public class kfsWorker implements Runnable {
 
-    protected kfsProcessConf conf;
-    private final boolean debug;
+    protected final kfsProcessConf conf;
+    protected final boolean debug;
 
     public kfsWorker(kfsProcessConf conf) {
         this(conf, false);
     }
+
     public kfsWorker(kfsProcessConf conf, boolean debug) {
         this.conf = conf;
         this.debug = debug;
     }
 
-    protected void catchInfo(String msg) {
-        System.out.println(msg);
+    protected void catchTrace(String msg) {
+        if (debug) {
+            System.err.println(msg);
+        }
     }
 
+    protected void catchInfo(String msg) {
+        System.err.println(msg);
+    }
+
+    protected final void catchError(String msg) {
+        catchError(msg, null);
+    }
     protected void catchError(String msg, Exception ex) {
         System.err.println(msg);
-        ex.printStackTrace(System.err);
+        if (ex != null) {
+            ex.printStackTrace(System.err);
+        }
     }
 
     protected String getMainClass() {
