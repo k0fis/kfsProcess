@@ -1,9 +1,11 @@
 package kfs.kfsProcess;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 
 /**
  *
@@ -13,33 +15,41 @@ public class kfsWorker implements Runnable {
 
     protected final kfsProcessConf conf;
     protected final boolean debug;
+    private final PrintStream out, err;
 
     public kfsWorker(kfsProcessConf conf) {
-        this(conf, false);
+        this(conf, false, System.err, System.err);
     }
 
     public kfsWorker(kfsProcessConf conf, boolean debug) {
+        this(conf, debug, System.err, System.err);
+    }
+
+    public kfsWorker(kfsProcessConf conf, boolean debug, PrintStream out, PrintStream err) {
         this.conf = conf;
         this.debug = debug;
+        this.out = out;
+        this.err = err;
     }
 
     protected void catchTrace(String msg) {
         if (debug) {
-            System.err.println(msg);
+            err.println(msg);
         }
     }
 
     protected void catchInfo(String msg) {
-        System.err.println(msg);
+        out.println(msg);
     }
 
     protected final void catchError(String msg) {
         catchError(msg, null);
     }
+
     protected void catchError(String msg, Exception ex) {
-        System.err.println(msg);
+        err.println(msg);
         if (ex != null) {
-            ex.printStackTrace(System.err);
+            ex.printStackTrace(err);
         }
     }
 
@@ -62,34 +72,14 @@ public class kfsWorker implements Runnable {
         try {
             ProcessBuilder builder = new ProcessBuilder(cmdLst);
             Process process = builder.start();
+            Thread ot = inheritIO(process.getInputStream(), out);
+            Thread et = inheritIO(process.getErrorStream(), err);
+            ot.start();
+            et.start();
             process.waitFor();
-
-            final char[] buffer = new char[1024];
-            InputStreamReader in = new InputStreamReader(process.getErrorStream());
-            try {
-                for (;;) {
-                    int rsz = in.read(buffer, 0, buffer.length);
-                    if (rsz < 0) {
-                        break;
-                    }
-                    catchError(new String(buffer), null);
-                }
-            } finally {
-                in.close();
-            }
-            in = new InputStreamReader(process.getInputStream());
-            try {
-                for (;;) {
-                    int rsz = in.read(buffer, 0, buffer.length);
-                    if (rsz < 0) {
-                        break;
-                    }
-                    catchInfo(new String(buffer));
-                }
-            } finally {
-                in.close();
-            }
             process.destroy();
+            ot.join();
+            et.join(); 
         } catch (IOException ex) {
             catchError("Cannot execute " + cmdLst, ex);
         } catch (InterruptedException ex) {
@@ -98,6 +88,19 @@ public class kfsWorker implements Runnable {
         if (debug) {
             catchInfo("process done");
         }
+    }
+
+    private static Thread inheritIO(final InputStream src, final PrintStream dest) {
+        return new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Scanner sc = new Scanner(src);
+                while (sc.hasNextLine()) {
+                    dest.println(sc.nextLine());
+                }
+                dest.flush();
+            }
+        });
     }
 
 }
