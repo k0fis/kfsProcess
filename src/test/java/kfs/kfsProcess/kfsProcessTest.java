@@ -25,11 +25,15 @@ public class kfsProcessTest extends TestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
     }
+    
+    public void testNull() {
+        
+    }
 
     /**
      * Test of catchInfo method, of class kfsProcess.
      */
-    public void testRun() {
+    public void estRun() {
         kfsProcessFactory factory = new kfsProcessFactory() {
 
             @Override

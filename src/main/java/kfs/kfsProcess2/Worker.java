@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -15,22 +16,16 @@ public class Worker implements Runnable {
 
     protected final String classPath;
     protected final String mainClass;
-    protected final String []argumentsList;
+    protected final List<String> switchList;
+    protected final List<String> argumentsList;
     protected final boolean debug;
     private final PrintStream out, err;
 
-    public Worker(String mainClass, String []argumentsList) {
-        this(getClassPath0(), mainClass, argumentsList, false, System.err, System.err);
-    }
-
-    public Worker(String mainClass, String []argumentsList, boolean debug) {
-        this(getClassPath0(), mainClass, argumentsList, debug, System.err, System.err);
-    }
-
-    public Worker(String classPath, String mainClass, String []argumentsList, boolean debug, PrintStream out, PrintStream err) {
+    public Worker(String classPath, String mainClass, List<String>argumentsList, List<String>switchList, boolean debug, PrintStream out, PrintStream err) {
         this.classPath = classPath;
         this.mainClass = mainClass;
         this.argumentsList = argumentsList;
+        this.switchList = switchList;
         this.debug = debug;
         this.out = out;
         this.err = err;
@@ -57,15 +52,13 @@ public class Worker implements Runnable {
         }
     }
 
-    protected static String getClassPath0() {
-        return System.getProperty("java.class.path");
-    }
-
     @Override
     public void run() {
         ArrayList<String> cmdLst = new ArrayList<String>();
-        cmdLst.addAll(Arrays.asList("java", "-cp", classPath, mainClass));
-        cmdLst.addAll(Arrays.asList(argumentsList));
+        cmdLst.add("java");
+        cmdLst.addAll(switchList);
+        cmdLst.addAll(Arrays.asList("-cp", classPath, mainClass));
+        cmdLst.addAll(argumentsList);
         if (debug) {
             catchInfo("run process " + Arrays.toString(cmdLst.toArray(new String[cmdLst.size()])));
         }
@@ -90,7 +83,7 @@ public class Worker implements Runnable {
         }
     }
 
-    private static Thread inheritIO(final InputStream src, final PrintStream dest) {
+    private Thread inheritIO(final InputStream src, final PrintStream dest) {
         return new Thread(new Runnable() {
             @Override
             public void run() {

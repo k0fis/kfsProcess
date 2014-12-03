@@ -8,7 +8,7 @@ import java.util.List;
  */
 public interface ProcessFactory {
 
-    Worker createWorker(String mainClass, String[] arguments);
+    Worker createWorker(List<String> arguments);
     
-    List<String[]> getArgumentsList();
+    List<List<String>> getArgumentsList();
 }

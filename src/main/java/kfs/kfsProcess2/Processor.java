@@ -1,5 +1,6 @@
 package kfs.kfsProcess2;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -29,11 +30,11 @@ public class Processor {
     }
 
     @SuppressWarnings("empty-statement")
-    public void run(String mainClass)  {
+    public void run()  {
 
         ExecutorService pool = Executors.newFixedThreadPool(poolSize);
-        for (String[] cfg : factory.getArgumentsList()) {
-            pool.execute(factory.createWorker(mainClass, cfg));
+        for (List<String> cfg : factory.getArgumentsList()) {
+            pool.execute(factory.createWorker(cfg));
         }
         pool.shutdown();
 
